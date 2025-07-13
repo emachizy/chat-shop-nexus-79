@@ -1,8 +1,9 @@
 
-import React from 'react';
-import { ShoppingCart, Store, MessageCircle, User, Menu } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingCart, Store, MessageCircle, User, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 interface NavbarProps {
   cartItemsCount: number;
@@ -64,9 +65,45 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
             
             {/* Mobile Menu Button */}
             {isMobile && (
-              <Button variant="ghost" size="sm" className="md:hidden">
-                <Menu className="h-4 w-4" />
-              </Button>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="md:hidden">
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col space-y-4 mt-6">
+                    <Button
+                      variant="ghost"
+                      onClick={onOpenChat}
+                      className="flex items-center space-x-2 justify-start"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span>AI Assistant</span>
+                    </Button>
+                    
+                    <Button
+                      variant="ghost"
+                      onClick={onOpenCart}
+                      className="flex items-center space-x-2 justify-start"
+                    >
+                      <ShoppingCart className="h-4 w-4" />
+                      <span>Cart {cartItemsCount > 0 && `(${cartItemsCount})`}</span>
+                    </Button>
+                    
+                    <Button 
+                      variant="ghost" 
+                      className="flex items-center space-x-2 justify-start"
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Vendor Portal</span>
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             )}
           </div>
         </div>
