@@ -18,12 +18,12 @@ const ProductDetails = ({ product, isOpen, onClose, onAddToCart }: ProductDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">{product.name}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-2xl font-bold pr-6">{product.name}</DialogTitle>
         </DialogHeader>
         
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           {/* Product Image */}
           <div className="space-y-4">
             <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
@@ -42,26 +42,26 @@ const ProductDetails = ({ product, isOpen, onClose, onAddToCart }: ProductDetail
           </div>
 
           {/* Product Information */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="secondary" className="capitalize">
-                  {product.category}
-                </Badge>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm text-gray-600">4.5 (128 reviews)</span>
+            <div className="space-y-4 sm:space-y-6">
+              <div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
+                  <Badge variant="secondary" className="capitalize w-fit">
+                    {product.category}
+                  </Badge>
+                  <div className="flex items-center gap-1">
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                    <span className="text-xs sm:text-sm text-gray-600">4.5 (128 reviews)</span>
+                  </div>
                 </div>
+                
+                <div className="text-2xl sm:text-3xl font-bold text-primary mb-3 sm:mb-4">
+                  ₦{product.price.toLocaleString()}
+                </div>
+                
+                <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-3 sm:mb-4">
+                  {product.description}
+                </p>
               </div>
-              
-              <div className="text-3xl font-bold text-primary mb-4">
-                ₦{product.price.toLocaleString()}
-              </div>
-              
-              <p className="text-gray-700 text-base leading-relaxed mb-4">
-                {product.description}
-              </p>
-            </div>
 
             {/* Stock and Vendor Info */}
             <div className="space-y-3">
@@ -85,7 +85,7 @@ const ProductDetails = ({ product, isOpen, onClose, onAddToCart }: ProductDetail
             {/* Product Specifications */}
             <div className="border-t pt-4">
               <h3 className="font-semibold mb-3">Specifications</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Category:</span>
                   <span className="ml-2 capitalize">{product.category}</span>

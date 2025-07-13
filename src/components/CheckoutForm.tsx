@@ -44,20 +44,20 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[600px] flex flex-col">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[600px] flex flex-col">
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
-            <CardTitle>Checkout - ₦{total.toLocaleString()}</CardTitle>
+            <CardTitle className="text-base sm:text-lg">Checkout - ₦{total.toLocaleString()}</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose} className="text-white hover:bg-white/20">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-auto p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <CardContent className="flex-1 overflow-auto p-3 sm:p-6">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="fullName">Full Name *</Label>
                 <Input
@@ -104,7 +104,7 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="city">City *</Label>
                 <Input
