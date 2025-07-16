@@ -403,7 +403,7 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-4xl h-[90vh] sm:h-[600px] flex flex-col">
+      <Card className="w-full max-w-4xl h-[80vh] sm:h-[500px] flex flex-col">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center space-x-2">
