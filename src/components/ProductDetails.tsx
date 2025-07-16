@@ -18,7 +18,7 @@ const ProductDetails = ({ product, isOpen, onClose, onAddToCart }: ProductDetail
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-3 sm:p-6">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto p-3 sm:p-6">
         <DialogHeader>
           <DialogTitle className="text-lg sm:text-2xl font-bold pr-6">{product.name}</DialogTitle>
         </DialogHeader>

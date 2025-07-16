@@ -45,7 +45,7 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[600px] flex flex-col">
+      <Card className="w-full max-w-2xl max-h-[80vh] sm:max-h-[500px] flex flex-col">
         <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3 sm:px-6 sm:py-4">
           <div className="flex justify-between items-center">
             <CardTitle className="text-base sm:text-lg">Checkout - ₦{total.toLocaleString()}</CardTitle>
