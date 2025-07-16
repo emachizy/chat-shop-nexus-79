@@ -512,112 +512,221 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-4xl h-[80vh] sm:h-[500px] flex flex-col">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center space-x-2">
-              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-sm sm:text-base">
-                AI Shopping Assistant
-              </span>
-              {cartItems.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                  items
-                </span>
-              )}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
-
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollAreaRef}>
-            <div className="space-y-3 sm:space-y-4 pr-2 sm:pr-4">
-              {messages.map((message) => (
-                <div key={message.id} className="space-y-3">
-                  <div
-                    className={`flex ${
-                      message.type === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
-                    <div
-                      className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg whitespace-pre-line text-sm sm:text-base ${
-                        message.type === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-900"
-                      }`}
-                    >
-                      {message.content}
-                    </div>
-                  </div>
-
-                  {message.products && message.products.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 mt-3 pr-1 sm:pr-2 max-h-96 overflow-y-auto">
-                      {message.products.map((product) => (
-                        <div key={product.id} className="relative">
-                          <ProductCard
-                            product={product}
-                            onAddToCart={() => addToCartInChat(product)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </ScrollArea>
-
-          <div className="p-3 sm:p-4 border-t">
-            <div className="flex space-x-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me anything..."
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                disabled={isLoading}
-                className="text-sm sm:text-base"
-              />
+    <>
+      {/* Mobile: Modal overlay */}
+      <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2">
+        <Card className="w-full max-w-4xl h-[80vh] flex flex-col">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3">
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center space-x-2">
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-sm">AI Shopping Assistant</span>
+                {cartItems.length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
+                  </span>
+                )}
+              </CardTitle>
               <Button
-                onClick={handleSendMessage}
-                disabled={isLoading || !inputValue.trim()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 sm:px-4"
+                variant="ghost"
                 size="sm"
+                onClick={onClose}
+                className="text-white hover:bg-white/20"
               >
-                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+          </CardHeader>
+
+          <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            <ScrollArea className="flex-1 p-3" ref={scrollAreaRef}>
+              <div className="space-y-3 pr-2">
+                {messages.map((message) => (
+                  <div key={message.id} className="space-y-3">
+                    <div
+                      className={`flex ${
+                        message.type === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[85%] px-3 py-2 rounded-lg whitespace-pre-line text-sm ${
+                          message.type === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+
+                    {message.products && message.products.length > 0 && (
+                      <div className="grid grid-cols-1 gap-2 mt-3 pr-1 max-h-96 overflow-y-auto">
+                        {message.products.map((product) => (
+                          <div key={product.id} className="relative">
+                            <ProductCard
+                              product={product}
+                              onAddToCart={() => addToCartInChat(product)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="p-3 border-t">
+              <div className="flex space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Ask me anything..."
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={isLoading}
+                  className="text-sm"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={isLoading || !inputValue.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 px-3"
+                  size="sm"
+                >
+                  <Send className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Desktop: Sidebar */}
+      <aside 
+        className={`hidden md:block fixed top-0 right-0 h-full w-96 bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <Card className="h-full flex flex-col border-0 rounded-none shadow-none">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4">
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center space-x-2">
+                <MessageCircle className="h-5 w-5" />
+                <span className="text-base">AI Shopping Assistant</span>
+                {cartItems.length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
+                  </span>
+                )}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
+
+          <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
+              <div className="space-y-4 pr-4">
+                {messages.map((message) => (
+                  <div key={message.id} className="space-y-3">
+                    <div
+                      className={`flex ${
+                        message.type === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[85%] px-4 py-2 rounded-lg whitespace-pre-line text-sm ${
+                          message.type === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+
+                    {message.products && message.products.length > 0 && (
+                      <div className="grid grid-cols-1 gap-3 mt-3 pr-2 max-h-96 overflow-y-auto">
+                        {message.products.map((product) => (
+                          <div key={product.id} className="relative">
+                            <ProductCard
+                              product={product}
+                              onAddToCart={() => addToCartInChat(product)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </ScrollArea>
+
+            <div className="p-4 border-t">
+              <div className="flex space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Ask me anything..."
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={isLoading}
+                  className="text-sm"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={isLoading || !inputValue.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 px-4"
+                  size="sm"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </aside>
+    </>
   );
 };
 
