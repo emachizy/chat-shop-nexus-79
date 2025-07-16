@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
-import { CartItem, Product } from '@/types';
-import { mockProducts } from '@/data/mockData';
-import Navbar from '@/components/Navbar';
-import ProductGrid from '@/components/ProductGrid';
-import ProductDetails from '@/components/ProductDetails';
-import ChatBot from '@/components/ChatBot';
-import Cart from '@/components/Cart';
-import CheckoutForm from '@/components/CheckoutForm';
-import OrderSuccess from '@/components/OrderSuccess';
-import { useToast } from '@/hooks/use-toast';
+import React, { useState } from "react";
+import { CartItem, Product } from "@/types";
+import { mockProducts } from "@/data/mockData";
+import Navbar from "@/components/Navbar";
+import ProductGrid from "@/components/ProductGrid";
+import ProductDetails from "@/components/ProductDetails";
+import ChatBot from "@/components/ChatBot";
+import Cart from "@/components/Cart";
+import CheckoutForm from "@/components/CheckoutForm";
+import OrderSuccess from "@/components/OrderSuccess";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [products] = useState<Product[]>(mockProducts);
@@ -23,21 +23,26 @@ const Index = () => {
   const { toast } = useToast();
 
   const addToCart = (product: Product) => {
-    setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.product.id === product.id);
-      
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find(
+        (item) => item.product.id === product.id
+      );
+
       if (existingItem) {
-        return prevItems.map(item =>
+        return prevItems.map((item) =>
           item.product.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
-        return [...prevItems, {
-          id: Date.now().toString(),
-          product,
-          quantity: 1,
-        }];
+        return [
+          ...prevItems,
+          {
+            id: Date.now().toString(),
+            product,
+            quantity: 1,
+          },
+        ];
       }
     });
 
@@ -53,15 +58,15 @@ const Index = () => {
   };
 
   const updateCartQuantity = (itemId: string, quantity: number) => {
-    setCartItems(prevItems =>
-      prevItems.map(item =>
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
         item.id === itemId ? { ...item, quantity } : item
       )
     );
   };
 
   const removeFromCart = (itemId: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+    setCartItems((prevItems) => prevItems.filter((item) => item.id !== itemId));
     toast({
       title: "Removed from cart",
       description: "Item has been removed from your cart.",
@@ -74,14 +79,20 @@ const Index = () => {
   };
 
   const handleCheckoutSubmit = (addressData: any) => {
-    const total = cartItems.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+    const total = cartItems.reduce(
+      (sum, item) => sum + item.product.price * item.quantity,
+      0
+    );
     const orderId = `ORD-${Date.now().toString().slice(-8)}`;
-    
+
     const order = {
       orderId,
       total,
-      items: cartItems.map(item => ({ product: item.product, quantity: item.quantity })),
-      address: addressData
+      items: cartItems.map((item) => ({
+        product: item.product,
+        quantity: item.quantity,
+      })),
+      address: addressData,
     };
 
     setOrderData(order);
@@ -100,7 +111,10 @@ const Index = () => {
     setOrderData(null);
   };
 
-  const cartItemsCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const cartItemsCount = cartItems.reduce(
+    (sum, item) => sum + item.quantity,
+    0
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -109,7 +123,7 @@ const Index = () => {
         onOpenChat={() => setIsChatOpen(true)}
         onOpenCart={() => setIsCartOpen(true)}
       />
-      
+
       <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 px-2">
@@ -118,8 +132,9 @@ const Index = () => {
             </span>
           </h1>
           <p className="text-base sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
-            Discover amazing products from trusted vendors. Chat with our AI assistant to find exactly what you need, 
-            add items to cart, and checkout - all through natural conversation.
+            Discover amazing products from trusted vendors. Chat with our AI
+            assistant to find exactly what you need, add items to cart, and
+            checkout - all through natural conversation.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
             <button
@@ -136,12 +151,16 @@ const Index = () => {
 
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Featured Products</h2>
-            <span className="text-sm sm:text-base text-gray-600">{products.length} products available</span>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
+              Featured Products
+            </h2>
+            <span className="text-sm sm:text-base text-gray-600">
+              {products.length} products available
+            </span>
           </div>
-          
-          <ProductGrid 
-            products={products} 
+
+          <ProductGrid
+            products={products}
             onAddToCart={addToCart}
             onProductClick={handleProductClick}
           />
@@ -174,7 +193,10 @@ const Index = () => {
       <CheckoutForm
         isOpen={isCheckoutOpen}
         onClose={() => setIsCheckoutOpen(false)}
-        cartItems={cartItems.map(item => ({ product: item.product, quantity: item.quantity }))}
+        cartItems={cartItems.map((item) => ({
+          product: item.product,
+          quantity: item.quantity,
+        }))}
         onSubmit={handleCheckoutSubmit}
       />
 
