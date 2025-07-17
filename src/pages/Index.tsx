@@ -9,9 +9,11 @@ import Cart from "@/components/Cart";
 import CheckoutForm from "@/components/CheckoutForm";
 import OrderSuccess from "@/components/OrderSuccess";
 import { useToast } from "@/hooks/use-toast";
+import { useProducts, useCreateOrder } from "@/hooks/useDatabase";
 
 const Index = () => {
-  const [products] = useState<Product[]>(mockProducts);
+  const { products, loading: productsLoading } = useProducts();
+  const { createOrder } = useCreateOrder();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
