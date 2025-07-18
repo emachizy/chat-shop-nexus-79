@@ -512,32 +512,41 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-2 sm:p-4">
-      <Card className="w-full max-w-4xl h-[80vh] sm:h-[500px] flex flex-col">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg px-4 py-3 sm:px-6 sm:py-4">
-          <div className="flex justify-between items-center">
-            <CardTitle className="flex items-center space-x-2">
-              <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-              <span className="text-sm sm:text-base">
-                AI Shopping Assistant
-              </span>
-              {cartItems.length > 0 && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                  {cartItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
-                  items
+    <>
+      {/* Mobile overlay */}
+      <div className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden ${isOpen ? 'block' : 'hidden'}`} onClick={onClose} />
+      
+      {/* Chat container - sidebar on desktop, modal on mobile */}
+      <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        w-80 md:w-96 bg-white shadow-xl border-r border-border
+        md:shadow-2xl
+      `}>
+        <Card className="h-full flex flex-col border-0 rounded-none">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 sm:px-6 sm:py-4 border-b-0">
+            <div className="flex justify-between items-center">
+              <CardTitle className="flex items-center space-x-2">
+                <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-sm sm:text-base">
+                  AI Shopping Assistant
                 </span>
-              )}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </CardHeader>
+                {cartItems.length > 0 && (
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    {cartItems.reduce((sum, item) => sum + item.quantity, 0)}{" "}
+                    items
+                  </span>
+                )}
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </CardHeader>
 
         <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
           <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollAreaRef}>
@@ -616,8 +625,9 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
             </div>
           </div>
         </CardContent>
-      </Card>
-    </div>
+        </Card>
+      </div>
+    </>
   );
 };
 
