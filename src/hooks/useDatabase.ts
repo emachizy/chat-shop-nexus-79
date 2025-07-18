@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../contexts/AuthContext';
 import { Product, Vendor } from '../types';
+import type { Database } from '@/integrations/supabase/types';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -30,7 +31,7 @@ export const useProducts = () => {
         vendorId: item.vendor_id,
         name: item.name,
         description: item.description,
-        price: parseFloat(item.price),
+        price: parseFloat(item.price.toString()),
         category: item.category,
         images: item.images || [],
         stock: item.stock,
@@ -76,21 +77,18 @@ export const useCreateOrder = () => {
       );
 
       // Generate order number
-      const { data: orderNumberData, error: orderNumberError } = await supabase
-        .rpc('generate_order_number');
-
-      if (orderNumberError) throw orderNumberError;
+      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
       // Create order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          order_number: orderNumberData,
+          order_number: orderNumber,
           total_amount: totalAmount,
           shipping_address: orderData.shippingAddress,
           payment_status: orderData.paymentReference ? 'paid' : 'pending',
-          paystack_reference: orderData.paymentReference,
+          paystack_reference: orderData.paymentReference || null,
         })
         .select()
         .single();
