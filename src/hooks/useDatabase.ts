@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '../contexts/AuthContext';
 import { Product, Vendor } from '../types';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database, Tables } from '@/integrations/supabase/types';
 
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -26,7 +26,7 @@ export const useProducts = () => {
 
       if (error) throw error;
 
-      const formattedProducts: Product[] = data.map(item => ({
+      const formattedProducts: Product[] = (data || []).map((item: any) => ({
         id: item.id,
         vendorId: item.vendor_id,
         name: item.name,
@@ -76,15 +76,18 @@ export const useCreateOrder = () => {
         0
       );
 
-      // Generate order number
-      const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      // Generate order number using the database function
+      const { data: orderNumberData, error: orderNumberError } = await supabase
+        .rpc('generate_order_number');
+
+      if (orderNumberError) throw orderNumberError;
 
       // Create order
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
           user_id: user.id,
-          order_number: orderNumber,
+          order_number: orderNumberData,
           total_amount: totalAmount,
           shipping_address: orderData.shippingAddress,
           payment_status: orderData.paymentReference ? 'paid' : 'pending',
@@ -94,6 +97,7 @@ export const useCreateOrder = () => {
         .single();
 
       if (orderError) throw orderError;
+      if (!order) throw new Error('Failed to create order');
 
       // Create order items
       const orderItems = orderData.cartItems.map(item => ({
