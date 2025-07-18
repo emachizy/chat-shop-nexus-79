@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { X } from 'lucide-react';
 import { CartItem } from '@/types';
+import { PaystackCheckout } from './PaystackCheckout';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../hooks/use-toast';
 
 interface CheckoutFormProps {
   isOpen: boolean;
@@ -16,9 +19,11 @@ interface CheckoutFormProps {
 }
 
 const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
+    fullName: user?.user_metadata?.full_name || '',
+    email: user?.email || '',
     phone: '',
     address: '',
     city: '',
@@ -38,7 +43,33 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Form validation can be added here
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "Please sign in to place an order",
+        variant: "destructive",
+      });
+      return;
+    }
+    // Don't submit form immediately, let Paystack handle payment first
+  };
+
+  const handlePaymentSuccess = (reference: string) => {
+    // Submit order after successful payment
+    onSubmit({
+      ...formData,
+      paymentReference: reference,
+      userId: user?.id
+    });
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
   };
 
   if (!isOpen) return null;
@@ -161,12 +192,12 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
                 </div>
               </div>
               
-              <Button
-                type="submit"
+              <PaystackCheckout
+                amount={total}
+                onSuccess={handlePaymentSuccess}
+                onError={handlePaymentError}
                 className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                Complete Order
-              </Button>
+              />
             </div>
           </form>
         </CardContent>

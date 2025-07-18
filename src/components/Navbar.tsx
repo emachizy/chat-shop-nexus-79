@@ -4,6 +4,9 @@ import { ShoppingCart, Store, MessageCircle, User, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { UserMenu } from './UserMenu';
+import { Auth } from './Auth';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 
 interface NavbarProps {
   cartItemsCount: number;
@@ -13,6 +16,7 @@ interface NavbarProps {
 
 const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
   const isMobile = useIsMobile();
+  const [showAuth, setShowAuth] = useState(false);
 
   return (
     <nav className="bg-white shadow-lg border-b sticky top-0 z-50">
@@ -54,14 +58,9 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
               )}
             </Button>
             
-            <Button 
-              variant="ghost" 
-              size={isMobile ? "sm" : "sm"} 
-              className="hidden md:flex items-center space-x-2"
-            >
-              <User className="h-4 w-4" />
-              <span>Vendor Portal</span>
-            </Button>
+            <div className="hidden md:block">
+              <UserMenu onShowAuth={() => setShowAuth(true)} />
+            </div>
             
             {/* Mobile Menu Button */}
             {isMobile && (
@@ -94,13 +93,9 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
                       <span>Cart {cartItemsCount > 0 && `(${cartItemsCount})`}</span>
                     </Button>
                     
-                    <Button 
-                      variant="ghost" 
-                      className="flex items-center space-x-2 justify-start"
-                    >
-                      <User className="h-4 w-4" />
-                      <span>Vendor Portal</span>
-                    </Button>
+                    <div className="block md:hidden">
+                      <UserMenu onShowAuth={() => setShowAuth(true)} />
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -108,6 +103,15 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
           </div>
         </div>
       </div>
+
+      <Dialog open={showAuth} onOpenChange={setShowAuth}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Authentication</DialogTitle>
+          </DialogHeader>
+          <Auth onClose={() => setShowAuth(false)} />
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 };

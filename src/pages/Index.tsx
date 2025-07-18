@@ -9,9 +9,11 @@ import Cart from "@/components/Cart";
 import CheckoutForm from "@/components/CheckoutForm";
 import OrderSuccess from "@/components/OrderSuccess";
 import { useToast } from "@/hooks/use-toast";
+import { useProducts, useCreateOrder } from "@/hooks/useDatabase";
 
 const Index = () => {
-  const [products] = useState<Product[]>(mockProducts);
+  const { products, loading: productsLoading } = useProducts();
+  const { createOrder } = useCreateOrder();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isProductDetailsOpen, setIsProductDetailsOpen] = useState(false);
@@ -124,11 +126,7 @@ const Index = () => {
         onOpenCart={() => setIsCartOpen(true)}
       />
 
-      <main
-        className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 transition-all duration-300 ease-in-out ${
-          isChatOpen ? "md:mr-96" : ""
-        }`}
-      >
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="text-center mb-8 sm:mb-12">
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 px-2">
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
