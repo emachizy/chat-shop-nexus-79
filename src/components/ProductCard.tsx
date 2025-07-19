@@ -1,9 +1,8 @@
-
-import React from 'react';
-import { Product } from '@/types';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart } from 'lucide-react';
+import React from "react";
+import { Product } from "@/types";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ShoppingCart } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -11,17 +10,21 @@ interface ProductCardProps {
   onProductClick?: (product: Product) => void;
 }
 
-const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps) => {
+const ProductCard = ({
+  product,
+  onAddToCart,
+  onProductClick,
+}: ProductCardProps) => {
   const handleCardClick = (e: React.MouseEvent) => {
     // Don't trigger product details if clicking the add to cart button
-    if ((e.target as HTMLElement).closest('button')) {
+    if ((e.target as HTMLElement).closest("button")) {
       return;
     }
     onProductClick?.(product);
   };
 
   return (
-    <Card 
+    <Card
       className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
       onClick={handleCardClick}
     >
@@ -40,14 +43,24 @@ const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps)
           )}
         </div>
         <div className="p-3 sm:p-4">
-          <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-2">{product.name}</h3>
-          <p className="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">{product.description}</p>
+          <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-2">
+            {product.name}
+          </h3>
+          <p className="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">
+            {product.description}
+          </p>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
-            <span className="text-lg sm:text-2xl font-bold text-primary">₦{product.price.toLocaleString()}</span>
-            <span className="text-xs sm:text-sm text-gray-500">Stock: {product.stock}</span>
+            <span className="text-lg sm:text-2xl font-bold text-primary">
+              ₦{product.price.toLocaleString()}
+            </span>
+            <span className="text-xs sm:text-sm text-gray-500">
+              Stock: {product.stock}
+            </span>
           </div>
           {product.vendor && (
-            <p className="text-xs text-gray-500 mt-2">by {product.vendor.storeName}</p>
+            <p className="text-xs text-gray-500 mt-2">
+              by {product.vendor.storeName}
+            </p>
           )}
         </div>
       </CardContent>
@@ -61,7 +74,7 @@ const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps)
           disabled={product.stock === 0}
         >
           <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+          {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
         </Button>
       </CardFooter>
     </Card>

@@ -46,7 +46,18 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
   >([
     {
       role: "system",
-      content: `You are a helpful shopping assistant for an ecommerce platform. You can help users find products, add items to cart, checkout, and process payments. Keep responses concise and friendly. Prices are in Nigerian Naira (₦). You have access to product information and can guide users through the entire shopping process. Remember previous conversations and user preferences.`,
+      content: `You are a friendly and helpful AI shopping assistant on an e-commerce platform in Nigeria. Your job is to help users:
+- Find products
+- Explain product specifications clearly
+- Add items to the shopping cart
+- Summarize the user's cart
+- Guide users through checkout and payment
+
+Always respond in a concise, helpful, and conversational tone. Use emojis to improve readability (e.g., 🛒, 💳, 📱). If you're recommending or listing products, keep it under 5 items. Use markdown for formatting bold text (**like this**) and newlines for separation. 
+
+Currency: Nigerian Naira (₦). You have access to basic product info such as name, category, description, price, and stock.
+
+You must remember the user’s context, like past queries or added items, to respond intelligently.`,
     },
   ]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -514,14 +525,21 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
   return (
     <>
       {/* Mobile overlay */}
-      <div className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden ${isOpen ? 'block' : 'hidden'}`} onClick={onClose} />
-      
+      <div
+        className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden ${
+          isOpen ? "block" : "hidden"
+        }`}
+        onClick={onClose}
+      />
+
       {/* Chat container - sidebar on desktop, modal on mobile */}
-      <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+      <div
+        className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out
+        ${isOpen ? "translate-x-0" : "-translate-x-full"}
         w-80 md:w-96 bg-white shadow-xl border-r border-border
         md:shadow-2xl
-      `}>
+      `}
+      >
         <Card className="h-full flex flex-col border-0 rounded-none">
           <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 sm:px-6 sm:py-4 border-b-0">
             <div className="flex justify-between items-center">
@@ -548,83 +566,85 @@ const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
             </div>
           </CardHeader>
 
-        <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
-          <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollAreaRef}>
-            <div className="space-y-3 sm:space-y-4 pr-2 sm:pr-4">
-              {messages.map((message) => (
-                <div key={message.id} className="space-y-3">
-                  <div
-                    className={`flex ${
-                      message.type === "user" ? "justify-end" : "justify-start"
-                    }`}
-                  >
+          <CardContent className="flex-1 flex flex-col p-0 overflow-hidden">
+            <ScrollArea className="flex-1 p-3 sm:p-4" ref={scrollAreaRef}>
+              <div className="space-y-3 sm:space-y-4 pr-2 sm:pr-4">
+                {messages.map((message) => (
+                  <div key={message.id} className="space-y-3">
                     <div
-                      className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg whitespace-pre-line text-sm sm:text-base ${
+                      className={`flex ${
                         message.type === "user"
-                          ? "bg-blue-600 text-white"
-                          : "bg-gray-100 text-gray-900"
+                          ? "justify-end"
+                          : "justify-start"
                       }`}
                     >
-                      {message.content}
+                      <div
+                        className={`max-w-[85%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg whitespace-pre-line text-sm sm:text-base ${
+                          message.type === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-100 text-gray-900"
+                        }`}
+                      >
+                        {message.content}
+                      </div>
+                    </div>
+
+                    {message.products && message.products.length > 0 && (
+                      <div className="grid grid-cols-1 gap-2 mt-3 pr-1 max-h-96 overflow-y-auto">
+                        {message.products.map((product) => (
+                          <div key={product.id} className="relative">
+                            <ProductCard
+                              product={product}
+                              onAddToCart={() => addToCartInChat(product)}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 px-4 py-2 rounded-lg">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.1s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                          style={{ animationDelay: "0.2s" }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
+                )}
+              </div>
+            </ScrollArea>
 
-                  {message.products && message.products.length > 0 && (
-                    <div className="grid grid-cols-1 gap-2 mt-3 pr-1 max-h-96 overflow-y-auto">
-                      {message.products.map((product) => (
-                        <div key={product.id} className="relative">
-                          <ProductCard
-                            product={product}
-                            onAddToCart={() => addToCartInChat(product)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 px-4 py-2 rounded-lg">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.1s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: "0.2s" }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="p-3 sm:p-4 border-t">
+              <div className="flex space-x-2">
+                <Input
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder="Ask me anything..."
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  disabled={isLoading}
+                  className="text-sm sm:text-base"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={isLoading || !inputValue.trim()}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 sm:px-4"
+                  size="sm"
+                >
+                  <Send className="h-3 w-3 sm:h-4 sm:w-4" />
+                </Button>
+              </div>
             </div>
-          </ScrollArea>
-
-          <div className="p-3 sm:p-4 border-t">
-            <div className="flex space-x-2">
-              <Input
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Ask me anything..."
-                onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                disabled={isLoading}
-                className="text-sm sm:text-base"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={isLoading || !inputValue.trim()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 px-3 sm:px-4"
-                size="sm"
-              >
-                <Send className="h-3 w-3 sm:h-4 sm:w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
+          </CardContent>
         </Card>
       </div>
     </>
