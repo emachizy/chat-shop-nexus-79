@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { X } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { X, CreditCard, Truck } from 'lucide-react';
 import { CartItem } from '@/types';
 import { PaystackCheckout } from './PaystackCheckout';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +22,7 @@ interface CheckoutFormProps {
 const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [formData, setFormData] = useState({
     fullName: user?.user_metadata?.full_name || '',
     email: user?.email || '',
@@ -52,13 +54,23 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
       });
       return;
     }
-    // Don't submit form immediately, let Paystack handle payment first
+    
+    // If payment on delivery is selected, submit order immediately
+    if (paymentMethod === 'cod') {
+      onSubmit({
+        ...formData,
+        paymentMethod: 'cash_on_delivery',
+        userId: user?.id
+      });
+    }
+    // For card payment, don't submit form immediately, let Paystack handle payment first
   };
 
   const handlePaymentSuccess = (reference: string) => {
     // Submit order after successful payment
     onSubmit({
       ...formData,
+      paymentMethod: 'card',
       paymentReference: reference,
       userId: user?.id
     });
@@ -178,6 +190,34 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
               />
             </div>
 
+            {/* Payment Method Selection */}
+            <div className="border-t pt-4 mt-6">
+              <Label className="text-base font-semibold mb-4 block">Payment Method</Label>
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="card" id="card" />
+                  <Label htmlFor="card" className="flex items-center cursor-pointer flex-1">
+                    <CreditCard className="h-5 w-5 mr-2 text-blue-600" />
+                    <div>
+                      <div className="font-medium">Pay with Card</div>
+                      <div className="text-sm text-muted-foreground">Secure payment via Paystack</div>
+                    </div>
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                  <RadioGroupItem value="cod" id="cod" />
+                  <Label htmlFor="cod" className="flex items-center cursor-pointer flex-1">
+                    <Truck className="h-5 w-5 mr-2 text-green-600" />
+                    <div>
+                      <div className="font-medium">Pay on Delivery</div>
+                      <div className="text-sm text-muted-foreground">Pay cash when your order arrives</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {/* Order Summary */}
             <div className="border-t pt-4 mt-6">
               <div className="space-y-2">
                 {cartItems.map((item, index) => (
@@ -192,12 +232,23 @@ const CheckoutForm = ({ isOpen, onClose, cartItems, onSubmit }: CheckoutFormProp
                 </div>
               </div>
               
-              <PaystackCheckout
-                amount={total}
-                onSuccess={handlePaymentSuccess}
-                onError={handlePaymentError}
-                className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              />
+              {/* Conditional Payment Button */}
+              {paymentMethod === 'card' ? (
+                <PaystackCheckout
+                  amount={total}
+                  onSuccess={handlePaymentSuccess}
+                  onError={handlePaymentError}
+                  className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                />
+              ) : (
+                <Button
+                  type="submit"
+                  className="w-full mt-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                >
+                  <Truck className="h-4 w-4 mr-2" />
+                  Place Order (Pay on Delivery)
+                </Button>
+              )}
             </div>
           </form>
         </CardContent>
