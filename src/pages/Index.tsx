@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CartItem, Product } from "@/types";
 import { mockProducts } from "@/data/mockData";
 import Navbar from "@/components/Navbar";
@@ -23,6 +23,30 @@ const Index = () => {
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
   const [orderData, setOrderData] = useState<any>(null);
   const { toast } = useToast();
+
+  // Load cart items from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedCartItems = localStorage.getItem('cartItems');
+      if (savedCartItems) {
+        const parsedItems = JSON.parse(savedCartItems);
+        if (Array.isArray(parsedItems)) {
+          setCartItems(parsedItems);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load cart items from localStorage:', error);
+    }
+  }, []);
+
+  // Save cart items to localStorage whenever cartItems changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    } catch (error) {
+      console.error('Failed to save cart items to localStorage:', error);
+    }
+  }, [cartItems]);
 
   const addToCart = (product: Product) => {
     setCartItems((prevItems) => {
