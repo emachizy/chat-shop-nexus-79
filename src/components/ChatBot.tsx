@@ -220,6 +220,24 @@ You must remember the user’s context, like past queries or added items, to res
       return { type: "add_to_cart", product: matchedProduct };
     }
 
+    // Check for remove from cart commands
+    if (
+      (lowercaseInput.includes("remove") && lowercaseInput.includes("cart")) ||
+      (lowercaseInput.includes("delete") && lowercaseInput.includes("cart")) ||
+      lowercaseInput.includes("remove from cart")
+    ) {
+      const productName = input
+        .toLowerCase()
+        .replace(/remove|delete|from|cart/g, "")
+        .trim();
+      const matchedProduct = products.find(
+        (p) =>
+          p.name.toLowerCase().includes(productName) ||
+          productName.includes(p.name.toLowerCase())
+      );
+      return { type: "remove_from_cart", product: matchedProduct };
+    }
+
     // Check for checkout commands
     if (
       lowercaseInput.includes("checkout") ||
@@ -273,6 +291,49 @@ You must remember the user’s context, like past queries or added items, to res
     setMessages((prev) => [...prev, confirmMessage]);
   };
 
+  const removeFromCartInChat = (product: Product) => {
+    const existingItem = cartItems.find(
+      (item) => item.product.id === product.id
+    );
+    
+    if (!existingItem) {
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: `❌ ${product.name} is not in your cart. Say "show cart" to see your current items.`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      return;
+    }
+
+    if (existingItem.quantity > 1) {
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.product.id === product.id
+            ? { ...item, quantity: item.quantity - 1 }
+            : item
+        )
+      );
+      const confirmMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: `⬇️ Removed 1 ${product.name} from your cart. You now have ${existingItem.quantity - 1} of this item.`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, confirmMessage]);
+    } else {
+      setCartItems((prev) => prev.filter((item) => item.product.id !== product.id));
+      const confirmMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: "assistant",
+        content: `🗑️ Removed ${product.name} from your cart completely.`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, confirmMessage]);
+    }
+  };
+
   const showCart = () => {
     const total = cartItems.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
@@ -290,7 +351,7 @@ You must remember the user’s context, like past queries or added items, to res
             )
             .join(
               "\n"
-            )}\n\nTotal: ₦${total.toLocaleString()}\n\nSay "checkout" to proceed with your order.`;
+            )}\n\nTotal: ₦${total.toLocaleString()}\n\n💡 To remove items, say "remove [product name] from cart"\nSay "checkout" to proceed with your order.`;
 
     const cartMessage: ChatMessage = {
       id: Date.now().toString(),
@@ -498,6 +559,21 @@ You must remember the user’s context, like past queries or added items, to res
               type: "assistant",
               content:
                 "I couldn't find that product. Try being more specific or browse available products first.",
+              timestamp: new Date(),
+            };
+            setMessages((prev) => [...prev, errorMessage]);
+          }
+          break;
+
+        case "remove_from_cart":
+          if (command.product) {
+            removeFromCartInChat(command.product);
+          } else {
+            const errorMessage: ChatMessage = {
+              id: Date.now().toString(),
+              type: "assistant",
+              content:
+                "I couldn't find that product to remove. Try being more specific or say 'show cart' to see your current items.",
               timestamp: new Date(),
             };
             setMessages((prev) => [...prev, errorMessage]);
