@@ -157,6 +157,22 @@ You must remember the user’s context, like past queries or added items, to res
   const parseCommand = (input: string) => {
     const lowercaseInput = input.toLowerCase();
 
+    // Check for greetings
+    if (
+      lowercaseInput.includes("hi") ||
+      lowercaseInput.includes("hello") ||
+      lowercaseInput.includes("hey") ||
+      lowercaseInput.includes("how are you") ||
+      lowercaseInput.includes("good morning") ||
+      lowercaseInput.includes("good afternoon") ||
+      lowercaseInput.includes("good evening") ||
+      lowercaseInput === "hi" ||
+      lowercaseInput === "hello" ||
+      lowercaseInput === "hey"
+    ) {
+      return { type: "greeting" };
+    }
+
     // Check for specification requests
     if (
       lowercaseInput.includes("spec") ||
@@ -432,6 +448,25 @@ You must remember the user’s context, like past queries or added items, to res
       const command = parseCommand(currentInput);
 
       switch (command.type) {
+        case "greeting":
+          const greetingResponses = [
+            "Hello! 👋 I'm doing great and ready to help you shop! What are you looking for today?",
+            "Hi there! 😊 I'm here to help you find amazing products. What can I show you?",
+            "Hey! 🛍️ Nice to see you! I'm your personal shopping assistant. How can I help?",
+            "Hello! 🌟 I'm fantastic and excited to help you discover great products. What interests you?",
+            "Hi! 👋 Hope you're having a great day! I'm here to make your shopping experience awesome. What would you like to explore?"
+          ];
+          const randomGreeting = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
+          
+          const greetingMessage: ChatMessage = {
+            id: Date.now().toString(),
+            type: "assistant",
+            content: randomGreeting,
+            timestamp: new Date(),
+          };
+          setMessages((prev) => [...prev, greetingMessage]);
+          break;
+
         case "specifications":
           const specProduct = getProductSpecs(command.query);
           if (specProduct) {
