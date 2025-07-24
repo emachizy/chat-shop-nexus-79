@@ -454,10 +454,13 @@ You must remember the user’s context, like past queries or added items, to res
             "Hi there! 😊 I'm here to help you find amazing products. What can I show you?",
             "Hey! 🛍️ Nice to see you! I'm your personal shopping assistant. How can I help?",
             "Hello! 🌟 I'm fantastic and excited to help you discover great products. What interests you?",
-            "Hi! 👋 Hope you're having a great day! I'm here to make your shopping experience awesome. What would you like to explore?"
+            "Hi! 👋 Hope you're having a great day! I'm here to make your shopping experience awesome. What would you like to explore?",
           ];
-          const randomGreeting = greetingResponses[Math.floor(Math.random() * greetingResponses.length)];
-          
+          const randomGreeting =
+            greetingResponses[
+              Math.floor(Math.random() * greetingResponses.length)
+            ];
+
           const greetingMessage: ChatMessage = {
             id: Date.now().toString(),
             type: "assistant",
