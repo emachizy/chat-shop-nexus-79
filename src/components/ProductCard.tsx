@@ -1,8 +1,8 @@
 import React from "react";
 import { Product } from "@/types";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, ArrowUpRight } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -10,73 +10,83 @@ interface ProductCardProps {
   onProductClick?: (product: Product) => void;
 }
 
-const ProductCard = ({
-  product,
-  onAddToCart,
-  onProductClick,
-}: ProductCardProps) => {
+const ProductCard = ({ product, onAddToCart, onProductClick }: ProductCardProps) => {
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't trigger product details if clicking the add to cart button
-    if ((e.target as HTMLElement).closest("button")) {
-      return;
-    }
+    if ((e.target as HTMLElement).closest("button")) return;
     onProductClick?.(product);
   };
 
   return (
     <Card
-      className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 cursor-pointer"
       onClick={handleCardClick}
+      className="group relative overflow-hidden bg-card/60 backdrop-blur border-border/60 hover:border-primary/50 transition-all duration-500 cursor-pointer rounded-2xl shadow-card hover:shadow-glow hover:-translate-y-1"
     >
-      <CardContent className="p-0">
-        <div className="aspect-square overflow-hidden rounded-t-lg bg-gray-100">
-          {product.images[0] ? (
-            <img
-              src={product.images[0]}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
-              <span className="text-gray-400 text-lg">No Image</span>
-            </div>
-          )}
-        </div>
-        <div className="p-3 sm:p-4">
-          <h3 className="font-semibold text-base sm:text-lg mb-2 line-clamp-2">
-            {product.name}
-          </h3>
-          <p className="text-gray-600 text-xs sm:text-sm mb-2 line-clamp-2">
-            {product.description}
-          </p>
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-0">
-            <span className="text-lg sm:text-2xl font-bold text-primary">
-              ₦{product.price.toLocaleString()}
-            </span>
-            <span className="text-xs sm:text-sm text-gray-500">
-              Stock: {product.stock}
-            </span>
+      <div className="relative aspect-square overflow-hidden bg-muted">
+        {product.images[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gradient-surface">
+            <span className="text-muted-foreground text-sm">No Image</span>
           </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute top-3 left-3 flex gap-1.5">
+          {product.stock === 0 ? (
+            <span className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full bg-destructive/90 text-destructive-foreground backdrop-blur">
+              Sold out
+            </span>
+          ) : product.stock < 10 ? (
+            <span className="px-2 py-1 text-[10px] font-medium uppercase tracking-wider rounded-full bg-primary/90 text-primary-foreground backdrop-blur">
+              Low stock
+            </span>
+          ) : null}
+        </div>
+        <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/70 backdrop-blur flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+          <ArrowUpRight className="h-4 w-4 text-foreground" />
+        </div>
+      </div>
+
+      <div className="p-4 space-y-3">
+        <div>
           {product.vendor && (
-            <p className="text-xs text-gray-500 mt-2">
-              by {product.vendor.storeName}
+            <p className="text-[11px] uppercase tracking-widest text-muted-foreground mb-1">
+              {product.vendor.storeName}
             </p>
           )}
+          <h3 className="font-display font-semibold text-base leading-tight line-clamp-1 group-hover:text-primary transition-colors">
+            {product.name}
+          </h3>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+            {product.description}
+          </p>
         </div>
-      </CardContent>
-      <CardFooter className="p-3 sm:p-4 pt-0">
-        <Button
-          onClick={(e) => {
-            e.stopPropagation();
-            onAddToCart(product);
-          }}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-300 text-sm sm:text-base py-2 sm:py-3"
-          disabled={product.stock === 0}
-        >
-          <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-          {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-        </Button>
-      </CardFooter>
+
+        <div className="flex items-end justify-between pt-1">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Price</p>
+            <span className="text-xl font-display font-bold text-foreground">
+              ₦{product.price.toLocaleString()}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(product);
+            }}
+            disabled={product.stock === 0}
+            className="rounded-full bg-gradient-primary text-primary-foreground hover:opacity-90 hover:shadow-glow transition-all border-0"
+          >
+            <ShoppingCart className="h-4 w-4 mr-1" />
+            Add
+          </Button>
+        </div>
+      </div>
     </Card>
   );
 };
