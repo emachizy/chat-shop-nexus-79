@@ -19,6 +19,7 @@ interface ChatBotProps {
   onClose: () => void;
   products: Product[];
   onAddToCart: (product: Product) => void;
+  onCheckout?: () => void;
 }
 
 interface ConversationMemory {
