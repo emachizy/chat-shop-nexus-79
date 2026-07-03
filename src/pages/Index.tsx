@@ -104,32 +104,50 @@ const Index = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleCheckoutSubmit = (addressData: any) => {
+  const handleCheckoutSubmit = async (addressData: any) => {
     const total = cartItems.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0
     );
-    const orderId = `ORD-${Date.now().toString().slice(-8)}`;
 
-    const order = {
-      orderId,
-      total,
-      items: cartItems.map((item) => ({
-        product: item.product,
-        quantity: item.quantity,
-      })),
-      address: addressData,
-    };
+    try {
+      const order = await createOrder({
+        cartItems: cartItems.map((i) => ({ product: i.product, quantity: i.quantity })),
+        shippingAddress: {
+          fullName: addressData.fullName,
+          email: addressData.email,
+          phone: addressData.phone,
+          address: addressData.address,
+          city: addressData.city,
+          state: addressData.state,
+          zipCode: addressData.zipCode,
+          country: addressData.country,
+        },
+        paymentMethod: addressData.paymentMethod === 'cash_on_delivery' ? 'cash_on_delivery' : 'card',
+        paymentReference: addressData.paymentReference,
+      });
 
-    setOrderData(order);
-    setCartItems([]);
-    setIsCheckoutOpen(false);
-    setIsSuccessOpen(true);
+      setOrderData({
+        orderId: order.order_number,
+        total: Number(order.total_amount),
+        items: cartItems.map((item) => ({ product: item.product, quantity: item.quantity })),
+        address: addressData,
+      });
+      setCartItems([]);
+      setIsCheckoutOpen(false);
+      setIsSuccessOpen(true);
 
-    toast({
-      title: "Order placed successfully!",
-      description: `Order ${orderId} has been confirmed. Total: ₦${total.toLocaleString()}`,
-    });
+      toast({
+        title: "Order placed successfully!",
+        description: `Order ${order.order_number} confirmed. Total: ₦${Number(order.total_amount).toLocaleString()}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Could not place order",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSuccessClose = () => {
