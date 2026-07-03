@@ -264,6 +264,10 @@ const Index = () => {
         onClose={() => setIsChatOpen(false)}
         products={mockProducts}
         onAddToCart={addToCart}
+        onCheckout={() => {
+          setIsChatOpen(false);
+          setIsCheckoutOpen(true);
+        }}
       />
 
       <Cart
