@@ -27,7 +27,7 @@ interface ConversationMemory {
   content: string;
 }
 
-const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
+const ChatBot = ({ isOpen, onClose, products, onAddToCart, onCheckout }: ChatBotProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
