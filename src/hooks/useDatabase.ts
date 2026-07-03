@@ -66,9 +66,12 @@ export const useCreateOrder = () => {
   const createOrder = async (orderData: {
     cartItems: Array<{ product: Product; quantity: number }>;
     shippingAddress: any;
+    paymentMethod: 'card' | 'cash_on_delivery';
     paymentReference?: string;
   }) => {
-    if (!user) throw new Error('User must be authenticated');
+    if (!user) throw new Error('You must be signed in to place an order');
+    if (!orderData.cartItems.length) throw new Error('Your cart is empty');
+
     setLoading(true);
     try {
       const totalAmount = orderData.cartItems.reduce(
@@ -76,15 +79,13 @@ export const useCreateOrder = () => {
         0
       );
 
-      const { data: orderNumber } = await db.rpc('generate_order_number');
-
       const { data: order, error: orderError } = await db
         .from('orders')
         .insert({
           user_id: user.id,
-          order_number: orderNumber,
           total_amount: totalAmount,
           shipping_address: orderData.shippingAddress,
+          payment_method: orderData.paymentMethod,
           payment_status: orderData.paymentReference ? 'paid' : 'pending',
           paystack_reference: orderData.paymentReference || null,
         })
@@ -94,9 +95,12 @@ export const useCreateOrder = () => {
 
       const orderItems = orderData.cartItems.map((item) => ({
         order_id: order.id,
-        product_id: item.product.id,
+        product_ref: item.product.id,
+        product_name: item.product.name,
+        product_image: item.product.images?.[0] || null,
+        product_category: item.product.category || null,
+        unit_price: item.product.price,
         quantity: item.quantity,
-        price: item.product.price,
       }));
       const { error: itemsError } = await db.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
