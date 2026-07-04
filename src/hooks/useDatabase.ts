@@ -101,6 +101,7 @@ export const useCreateOrder = () => {
         product_category: item.product.category || null,
         unit_price: item.product.price,
         quantity: item.quantity,
+        vendor_id: (item.product as any).vendorId || null,
       }));
       const { error: itemsError } = await db.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;

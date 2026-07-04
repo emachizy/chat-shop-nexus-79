@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { CartItem, Product } from "@/types";
-import { mockProducts } from "@/data/mockData";
 import Navbar from "@/components/Navbar";
 import ProductGrid from "@/components/ProductGrid";
 import ProductDetails from "@/components/ProductDetails";
@@ -214,7 +213,7 @@ const Index = () => {
               <div className="absolute -bottom-8 -right-8 h-32 w-32 bg-primary/15 blur-2xl rounded-full" />
               <p className="text-xs uppercase tracking-widest text-muted-foreground">Live catalog</p>
               <p className="mt-3 font-display font-bold text-4xl text-gradient">
-                {mockProducts.length}+
+                {products.length}
               </p>
               <p className="mt-1 text-sm text-muted-foreground">products across categories</p>
             </div>
@@ -240,15 +239,23 @@ const Index = () => {
               </h2>
             </div>
             <span className="text-sm text-muted-foreground">
-              {mockProducts.length} products available
+              {products.length} products available
             </span>
           </div>
 
-          <ProductGrid
-            products={mockProducts}
-            onAddToCart={addToCart}
-            onProductClick={handleProductClick}
-          />
+          {productsLoading ? (
+            <p className="text-muted-foreground">Loading products…</p>
+          ) : products.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border p-10 text-center text-muted-foreground">
+              No products listed yet. Sellers can add products from the seller dashboard.
+            </div>
+          ) : (
+            <ProductGrid
+              products={products}
+              onAddToCart={addToCart}
+              onProductClick={handleProductClick}
+            />
+          )}
         </section>
       </main>
 
@@ -262,7 +269,7 @@ const Index = () => {
       <ChatBot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
-        products={mockProducts}
+        products={products}
         onAddToCart={addToCart}
         onCheckout={() => {
           setIsChatOpen(false);
