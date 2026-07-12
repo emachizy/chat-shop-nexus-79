@@ -1,65 +1,70 @@
-## Seller Dashboard — Build Plan
+## Pre-launch hardening plan
 
-### 1. Roles & access control (DB)
-- Create `app_role` enum: `admin`, `seller`.
-- Create `user_roles` table (`user_id`, `role`, unique together) + `has_role(user_id, role)` security-definer function.
-- Bootstrap: first admin is assigned via a one-off migration for the current signed-in user (I'll ask which email after the plan is approved). After that, only admins assign the `seller` role.
-- Simple `/admin` page (visible to admins only) to grant/revoke the seller role by user email.
+Goal: take the app from "works" to "safe to accept real orders from real customers."
 
-### 2. Storefront data model (DB)
-- `vendors` — one row per seller: `user_id` (FK auth.users), `store_name`, `description`, `avatar_url`, `is_active`. Row is auto-created the first time a seller opens their dashboard.
-- `products` — `vendor_id`, `name`, `description`, `price`, `category`, `images` (text[]), `stock`, `is_active`.
-- Add `vendor_id` (nullable snapshot) to existing `order_items` so seller order queries are cheap.
+### 1. Payments hardening (Paystack)
 
-RLS:
-- `products`: anyone can read active rows; owner seller can CRUD their own; admin full.
-- `vendors`: anyone can read active; owner + admin can update.
-- `order_items`: existing user policies remain; add "seller can view items for their vendor".
-- `orders`: add "seller can view orders that contain their items" (via security-definer helper to avoid recursion).
+Right now the client sets `payment_status='paid'` as soon as Paystack's popup callback fires. That can be faked from devtools. Fix:
 
-### 3. Image storage
-- Create public `product-images` bucket.
-- RLS on `storage.objects`: sellers can upload/update/delete inside `{vendor_id}/…`; public read.
-- Seller product form uploads via `supabase.storage`; stores resulting public URLs in `products.images`.
+- New edge function `verify-paystack-payment` (verify_jwt=false, CORS enabled):
+  - Input: `{ reference, order_id }`.
+  - Calls Paystack `GET /transaction/verify/{reference}` with `PAYSTACK_SECRET_KEY`.
+  - Confirms `status=success`, `amount` matches the order's `total_amount * 100`, `currency` matches, and reference isn't already used.
+  - Uses service role to update `orders.payment_status='paid'`, `paystack_reference`, `payment_verified_at`.
+  - Returns `{ verified: true }` or a clear error.
+- Add `PAYSTACK_SECRET_KEY` via `add_secret` (user pastes their live secret key).
+- `useCreateOrder` change: insert order with `payment_status='pending'`, then after Paystack popup success, invoke `verify-paystack-payment`. Only show OrderSuccess when verification returns true; otherwise show a "we couldn't confirm payment" state.
+- Cash-on-delivery flow unchanged.
+- Migration: add `payment_verified_at timestamptz` on `orders`; RLS unchanged (verification happens as service role).
 
-### 4. Frontend — seller area
-Routes under `/seller` guarded by `has_role(auth.uid(),'seller')`:
+### 2. Seller onboarding UX
 
-```text
-/seller                 → dashboard home (analytics)
-/seller/products        → list + search + toggle active + delete
-/seller/products/new    → create form (multi-image upload)
-/seller/products/:id    → edit form
-/seller/profile         → edit store name / description / avatar
-/seller/orders          → orders containing this seller's items, with fulfillment status update
-```
+Replace raw-UUID admin with an email + request flow.
 
-Layout: shadcn `Sidebar` (Dashboard, Products, Orders, Store profile, Sign out), collapsible, active-route highlight, header with `SidebarTrigger`.
+- Migration:
+  - `seller_requests` table (`user_id`, `store_name`, `pitch`, `status` enum `pending|approved|rejected`, `reviewed_by`, `reviewed_at`).
+  - GRANT + RLS: user can insert/select their own; admin can select all + update status.
+  - Security-definer function `approve_seller_request(request_id)` — flips status, inserts `user_roles(seller)`, creates a `vendors` row from the request. Admin-only via `has_role` check inside the function.
+  - View `admin_users_directory` (SECURITY DEFINER function) that returns `{user_id, email, created_at}` from `auth.users` — admin-only. Lets `/admin` look users up by email without exposing `auth.users`.
+- Frontend:
+  - New "Become a seller" page/modal on `/` for signed-in non-sellers: store name + short pitch → inserts into `seller_requests`.
+  - `/admin` gets two tabs: "Requests" (approve/reject) and "Sellers" (list + revoke). Add user lookup by email using the new function; keep UUID grant as a fallback.
+  - `UserMenu` shows "Become a seller" when the user has no seller role and no pending request; "Request pending" when one exists.
 
-Analytics on `/seller`: total revenue, order count, units sold, top 5 products (aggregated from `order_items` where `vendor_id = me`, `orders.payment_status = 'paid'` or all — I'll include both totals).
+### 3. Order fulfillment emails (Lovable Email)
 
-### 5. Storefront + AI chat wiring
-- Replace `mockProducts` usage in `Index.tsx` and `ChatBot.tsx` with the live `useProducts()` hook (already backed by the `products` table).
-- `useCreateOrder` snapshots `vendor_id` into each `order_items` row.
-- Empty state on the homepage when no products exist yet (guides admin to grant seller role → seller adds products).
+Prerequisites will be handled automatically: check email domain → if missing, show the setup dialog and stop until the user finishes; then set up email infra and scaffold app emails.
 
-### 6. Admin page
-- `/admin` route (admin only): search users by email, grant/revoke `seller` role, see current sellers list.
+Templates (React Email in `supabase/functions/_shared/transactional-email-templates/`):
+- `order-confirmation-buyer` — order number, items (name/qty/price), total, shipping address, payment status.
+- `new-order-seller` — per-seller: items in that seller's vendor, buyer name, shipping address, link to `/seller/orders`.
+- `order-status-update-buyer` — sent when seller changes fulfillment status (confirmed/shipped/delivered).
 
-### Technical notes
-- All `public` tables ship with `GRANT` + RLS + policies in one migration.
-- `has_role` is `SECURITY DEFINER` to avoid RLS recursion on cross-table policies.
-- Storage bucket created via `supabase--storage_create_bucket` (not raw SQL).
-- Sidebar uses shadcn `Sidebar` per project convention; no new deps.
-- Nothing is deleted from the current cart/checkout flow — only extended.
+Triggers:
+- After successful payment verification (card) or order insert (COD): edge function `send-order-emails` fans out — one buyer email + one email per distinct vendor in the order. Idempotency key: `order-confirm-{order_id}` / `new-order-{order_id}-{vendor_id}`.
+- On `orders.status` update from `SellerOrders`, invoke `send-transactional-email` with `order-status-update-buyer` (idempotency key includes status).
 
-### Deliverables
-- One DB migration (roles, vendors, products, order_items.vendor_id, RLS, policies, grants).
-- Storage bucket + object-level RLS migration.
-- New pages: `SellerLayout`, `SellerDashboard`, `SellerProducts`, `SellerProductForm`, `SellerOrders`, `SellerProfile`, `AdminUsers`.
-- New hooks: `useRole`, `useMyVendor`, `useMyProducts`, `useMyOrders`, `useSellerStats`.
-- Storefront + ChatBot switched to live products.
-- Route guards + nav entry in navbar (shows "Seller Dashboard" when the user has the role, "Admin" for admins).
+Registry updated; `send-transactional-email` and `send-order-emails` deployed.
+
+### 4. Legal + storefront polish
+
+- Static pages under `/legal`:
+  - `/legal/terms`, `/legal/privacy`, `/legal/refund`, `/legal/shipping`.
+  - App-owned content, matching site design system (Space Grotesk / DM Sans, existing tokens). Reuses `Footer`. Placeholders for company name / contact email that the user can fill in on the page directly — I'll ask for those values in the next turn if needed, otherwise ship with `[Your Business Name]` placeholders and a note in chat.
+- Footer: replace whatever legal links exist today with links to the four pages above + `mailto:` contact.
+- SEO metadata in `index.html`: real `<title>`, `<meta name="description">`, matching `og:title` / `og:description` / `og:type` / `twitter:card` for the storefront.
+- Storefront empty/low-catalog state: when < 4 products, show a "Featured stores" strip built from `vendors.is_active=true` instead of an empty grid, plus a "Become a seller" CTA for signed-in non-sellers.
+
+### Order of implementation
+
+1. Migration (payment_verified_at, seller_requests, admin_users_directory, approve_seller_request).
+2. Edge functions: `verify-paystack-payment`, later `send-order-emails`.
+3. Wire client: `useCreateOrder` + Paystack flow + "Become a seller" + `/admin` requests tab.
+4. Email domain check → setup infra → scaffold app emails → three templates → deploy → wire triggers.
+5. Legal pages + footer + SEO + storefront empty state.
 
 ### What I need from you before building
-Which email address should be the first admin? (I'll seed it in the migration; you'll be able to grant seller access to others from the `/admin` page after that.)
+
+- `PAYSTACK_SECRET_KEY` — I'll open the secret form when it's time.
+- Business/legal contact email + business name for legal pages (or say "use placeholders and I'll edit later").
+- Do you already own an email sending domain (e.g. `notify.yourshop.com`) or should I open the email setup dialog when we get there?

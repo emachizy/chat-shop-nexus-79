@@ -75,6 +75,7 @@ export type Database = {
           order_number: string
           payment_method: string
           payment_status: string
+          payment_verified_at: string | null
           paystack_reference: string | null
           shipping_address: Json
           status: string
@@ -88,6 +89,7 @@ export type Database = {
           order_number?: string
           payment_method?: string
           payment_status?: string
+          payment_verified_at?: string | null
           paystack_reference?: string | null
           shipping_address: Json
           status?: string
@@ -101,6 +103,7 @@ export type Database = {
           order_number?: string
           payment_method?: string
           payment_status?: string
+          payment_verified_at?: string | null
           paystack_reference?: string | null
           shipping_address?: Json
           status?: string
@@ -159,6 +162,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_requests: {
+        Row: {
+          created_at: string
+          id: string
+          pitch: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["seller_request_status"]
+          store_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pitch?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["seller_request_status"]
+          store_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pitch?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["seller_request_status"]
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -219,6 +258,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_get_user_emails: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
+      admin_lookup_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      approve_seller_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
       generate_order_number: { Args: never; Returns: string }
       has_role: {
         Args: {
@@ -235,9 +293,14 @@ export type Database = {
         Args: { _folder: string; _user_id: string }
         Returns: boolean
       }
+      reject_seller_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "seller"
+      seller_request_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -366,6 +429,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "seller"],
+      seller_request_status: ["pending", "approved", "rejected"],
     },
   },
 } as const

@@ -86,8 +86,10 @@ export const useCreateOrder = () => {
           total_amount: totalAmount,
           shipping_address: orderData.shippingAddress,
           payment_method: orderData.paymentMethod,
-          payment_status: orderData.paymentReference ? 'paid' : 'pending',
-          paystack_reference: orderData.paymentReference || null,
+          // Never trust the client to mark an order paid. Card orders are
+          // verified server-side via verify-paystack-payment before being
+          // flipped to 'paid'. Pay-on-delivery stays 'pending' until fulfilled.
+          payment_status: 'pending',
         })
         .select()
         .single();
@@ -105,6 +107,22 @@ export const useCreateOrder = () => {
       }));
       const { error: itemsError } = await db.from('order_items').insert(orderItems);
       if (itemsError) throw itemsError;
+
+      // Card payments: verify with Paystack server-side.
+      if (orderData.paymentMethod === 'card' && orderData.paymentReference) {
+        const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+          'verify-paystack-payment',
+          { body: { reference: orderData.paymentReference, order_id: order.id } },
+        );
+        if (verifyError || !verifyData?.verified) {
+          const msg = verifyError?.message || verifyData?.error || 'Payment could not be verified';
+          throw new Error(msg);
+        }
+        // Refresh order to reflect paid status
+        const { data: fresh } = await db.from('orders').select('*').eq('id', order.id).single();
+        return fresh || order;
+      }
+
       return order;
     } finally {
       setLoading(false);
