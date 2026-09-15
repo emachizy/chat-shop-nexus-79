@@ -13,7 +13,7 @@ export default function SellerProductForm() {
   const { id } = useParams();
   const editing = !!id;
   const navigate = useNavigate();
-  const { vendor } = useMyVendor();
+  const { vendor, loading: vendorLoading, error: vendorError } = useMyVendor();
   const { toast } = useToast();
 
   const [name, setName] = useState('');
@@ -34,7 +34,17 @@ export default function SellerProductForm() {
   }, [id, editing, toast]);
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!vendor) return;
+    if (!vendor) {
+      toast({
+        title: 'Store profile not ready',
+        description: vendorLoading
+          ? 'Still loading your seller profile — try again in a moment.'
+          : 'We could not load your seller profile, so images cannot be uploaded yet.',
+        variant: 'destructive',
+      });
+      e.target.value = '';
+      return;
+    }
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setUploading(true);
@@ -55,7 +65,16 @@ export default function SellerProductForm() {
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vendor) return;
+    if (!vendor) {
+      toast({
+        title: 'Store profile not ready',
+        description: vendorLoading
+          ? 'Still loading your seller profile — try again in a moment.'
+          : 'We could not load your seller profile, so this product cannot be saved yet.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
@@ -79,6 +98,11 @@ export default function SellerProductForm() {
     <div className="max-w-2xl">
       <h1 className="font-display font-bold text-3xl mb-6">{editing ? 'Edit product' : 'New product'}</h1>
       <Card className="p-6">
+        {vendorError && (
+          <div className="mb-4 rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive">
+            Couldn't load your seller profile ({vendorError}). Products can't be saved until this is resolved — try refreshing the page.
+          </div>
+        )}
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
             <Label>Name</Label>
@@ -116,12 +140,14 @@ export default function SellerProductForm() {
               ))}
               <label className="w-20 h-20 rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary text-muted-foreground">
                 {uploading ? '…' : <Upload className="h-5 w-5" />}
-                <input type="file" accept="image/*" multiple onChange={onFile} className="hidden" disabled={uploading} />
+                <input type="file" accept="image/*" multiple onChange={onFile} className="hidden" disabled={uploading || vendorLoading} />
               </label>
             </div>
           </div>
           <div className="flex gap-2 pt-4">
-            <Button type="submit" disabled={saving}>{saving ? 'Saving…' : editing ? 'Save changes' : 'Create product'}</Button>
+            <Button type="submit" disabled={saving || vendorLoading}>
+              {vendorLoading ? 'Loading store…' : saving ? 'Saving…' : editing ? 'Save changes' : 'Create product'}
+            </Button>
             <Button type="button" variant="outline" onClick={() => navigate('/seller/products')}>Cancel</Button>
           </div>
         </form>

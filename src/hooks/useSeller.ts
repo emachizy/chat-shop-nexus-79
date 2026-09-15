@@ -37,21 +37,32 @@ export const useMyVendor = () => {
   const { user } = useAuth();
   const [vendor, setVendor] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
-    if (!user) { setVendor(null); setLoading(false); return; }
+    if (!user) { setVendor(null); setError(null); setLoading(false); return; }
     setLoading(true);
-    const { data } = await db.from('vendors').select('*').eq('user_id', user.id).maybeSingle();
-    if (data) {
+    setError(null);
+    const { data, error: selectErr } = await db.from('vendors').select('*').eq('user_id', user.id).maybeSingle();
+    if (selectErr) {
+      setVendor(null);
+      setError(selectErr.message);
+    } else if (data) {
       setVendor(data);
     } else {
       // Auto-create vendor row (only succeeds if user has seller role due to RLS)
-      const { data: created } = await db
+      const { data: created, error: insertErr } = await db
         .from('vendors')
         .insert({ user_id: user.id, store_name: user.user_metadata?.full_name ? `${user.user_metadata.full_name}'s Store` : 'My Store' })
         .select()
         .single();
-      setVendor(created ?? null);
+      if (insertErr) {
+        console.error('Failed to create vendor profile:', insertErr);
+        setVendor(null);
+        setError(insertErr.message);
+      } else {
+        setVendor(created ?? null);
+      }
     }
     setLoading(false);
   }, [user]);
@@ -66,7 +77,7 @@ export const useMyVendor = () => {
     return data;
   };
 
-  return { vendor, loading, refetch, updateVendor };
+  return { vendor, loading, error, refetch, updateVendor };
 };
 
 // --------------- Image upload ---------------
