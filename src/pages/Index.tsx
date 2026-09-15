@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { CartItem, Product } from "@/types";
-import { mockProducts } from "@/data/mockData";
 import Navbar from "@/components/Navbar";
 import ProductGrid from "@/components/ProductGrid";
 import ProductDetails from "@/components/ProductDetails";
@@ -104,32 +103,50 @@ const Index = () => {
     setIsCheckoutOpen(true);
   };
 
-  const handleCheckoutSubmit = (addressData: any) => {
+  const handleCheckoutSubmit = async (addressData: any) => {
     const total = cartItems.reduce(
       (sum, item) => sum + item.product.price * item.quantity,
       0
     );
-    const orderId = `ORD-${Date.now().toString().slice(-8)}`;
 
-    const order = {
-      orderId,
-      total,
-      items: cartItems.map((item) => ({
-        product: item.product,
-        quantity: item.quantity,
-      })),
-      address: addressData,
-    };
+    try {
+      const order = await createOrder({
+        cartItems: cartItems.map((i) => ({ product: i.product, quantity: i.quantity })),
+        shippingAddress: {
+          fullName: addressData.fullName,
+          email: addressData.email,
+          phone: addressData.phone,
+          address: addressData.address,
+          city: addressData.city,
+          state: addressData.state,
+          zipCode: addressData.zipCode,
+          country: addressData.country,
+        },
+        paymentMethod: addressData.paymentMethod === 'cash_on_delivery' ? 'cash_on_delivery' : 'card',
+        paymentReference: addressData.paymentReference,
+      });
 
-    setOrderData(order);
-    setCartItems([]);
-    setIsCheckoutOpen(false);
-    setIsSuccessOpen(true);
+      setOrderData({
+        orderId: order.order_number,
+        total: Number(order.total_amount),
+        items: cartItems.map((item) => ({ product: item.product, quantity: item.quantity })),
+        address: addressData,
+      });
+      setCartItems([]);
+      setIsCheckoutOpen(false);
+      setIsSuccessOpen(true);
 
-    toast({
-      title: "Order placed successfully!",
-      description: `Order ${orderId} has been confirmed. Total: ₦${total.toLocaleString()}`,
-    });
+      toast({
+        title: "Order placed successfully!",
+        description: `Order ${order.order_number} confirmed. Total: ₦${Number(order.total_amount).toLocaleString()}`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Could not place order",
+        description: err?.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSuccessClose = () => {
@@ -143,7 +160,7 @@ const Index = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <div className="min-h-screen bg-background text-foreground">
       <Navbar
         cartItemsCount={cartItemsCount}
         onOpenChat={() => setIsChatOpen(true)}
@@ -151,50 +168,95 @@ const Index = () => {
       />
 
       <main
-        className={`max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 transition-all duration-300 ease-in-out
-        ${isChatOpen ? "md:ml-96" : "md:ml-0"}
-      `}
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 transition-all duration-500 ease-out
+        ${isChatOpen ? "md:ml-96" : "md:ml-0"}`}
       >
-        <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 px-2">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Shop Smart with AI
-            </span>
-          </h1>
-          <p className="text-base sm:text-xl text-gray-600 mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
-            Discover amazing products from trusted vendors. Chat with our AI
-            assistant to find exactly what you need, add items to cart, and
-            checkout - all through natural conversation.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-            <button
-              onClick={() => setIsChatOpen(true)}
-              className="px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold text-base sm:text-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              🤖 Start AI Shopping
-            </button>
-            <button className="px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold text-base sm:text-lg hover:border-blue-600 hover:text-blue-600 transition-all duration-300">
-              Browse Categories
-            </button>
-          </div>
-        </div>
+        {/* Hero — Bento grid */}
+        <section className="mb-16 animate-fade-up">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:auto-rows-[minmax(140px,auto)]">
+            {/* Big headline card */}
+            <div className="md:col-span-4 md:row-span-2 relative overflow-hidden rounded-3xl bg-gradient-surface border border-border/60 p-8 sm:p-12 shadow-card">
+              <div className="absolute inset-0 grid-lines opacity-30" />
+              <div className="absolute -top-24 -right-24 h-72 w-72 bg-primary/20 blur-3xl rounded-full" />
+              <div className="relative">
+                <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  AI-powered commerce
+                </span>
+                <h1 className="mt-6 font-display font-bold text-4xl sm:text-5xl lg:text-6xl leading-[1.05] tracking-tight">
+                  Shop smarter.
+                  <br />
+                  <span className="text-gradient">Chat, click, checkout.</span>
+                </h1>
+                <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl">
+                  Discover curated products from trusted vendors and let our AI assistant guide you from browse to buy — all in one conversation.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full bg-gradient-primary text-primary-foreground font-semibold shadow-glow hover:opacity-95 hover:scale-[1.02] transition-all"
+                  >
+                    ✨ Start AI Shopping
+                  </button>
+                  <a
+                    href="#featured"
+                    className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full border border-border bg-card/50 backdrop-blur text-foreground font-semibold hover:border-primary/60 hover:text-primary transition-all"
+                  >
+                    Browse products
+                  </a>
+                </div>
+              </div>
+            </div>
 
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-              Featured Products
-            </h2>
-            <span className="text-sm sm:text-base text-gray-600">
-              {mockProducts.length} products available
+            {/* Stat card 1 */}
+            <div className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-card">
+              <div className="absolute -bottom-8 -right-8 h-32 w-32 bg-primary/15 blur-2xl rounded-full" />
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Live catalog</p>
+              <p className="mt-3 font-display font-bold text-4xl text-gradient">
+                {products.length}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">products across categories</p>
+            </div>
+
+            {/* Stat card 2 */}
+            <div className="md:col-span-2 relative overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-card">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Assistant</p>
+              <p className="mt-3 font-display font-bold text-2xl leading-tight">
+                Ask, add, checkout —<br />
+                <span className="text-primary">in plain English.</span>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Featured Products */}
+        <section id="featured" className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-2">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-primary font-medium">Featured</p>
+              <h2 className="font-display font-bold text-2xl sm:text-3xl mt-1">
+                What people are shopping now
+              </h2>
+            </div>
+            <span className="text-sm text-muted-foreground">
+              {products.length} products available
             </span>
           </div>
 
-          <ProductGrid
-            products={mockProducts}
-            onAddToCart={addToCart}
-            onProductClick={handleProductClick}
-          />
-        </div>
+          {productsLoading ? (
+            <p className="text-muted-foreground">Loading products…</p>
+          ) : products.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-border p-10 text-center text-muted-foreground">
+              No products listed yet. Sellers can add products from the seller dashboard.
+            </div>
+          ) : (
+            <ProductGrid
+              products={products}
+              onAddToCart={addToCart}
+              onProductClick={handleProductClick}
+            />
+          )}
+        </section>
       </main>
 
       <ProductDetails
@@ -207,8 +269,12 @@ const Index = () => {
       <ChatBot
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
-        products={mockProducts}
+        products={products}
         onAddToCart={addToCart}
+        onCheckout={() => {
+          setIsChatOpen(false);
+          setIsCheckoutOpen(true);
+        }}
       />
 
       <Cart

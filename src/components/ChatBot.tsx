@@ -20,6 +20,7 @@ interface ChatBotProps {
   onClose: () => void;
   products: Product[];
   onAddToCart: (product: Product) => void;
+  onCheckout?: () => void;
 }
 
 interface ConversationMemory {
@@ -27,7 +28,7 @@ interface ConversationMemory {
   content: string;
 }
 
-const ChatBot = ({ isOpen, onClose, products, onAddToCart }: ChatBotProps) => {
+const ChatBot = ({ isOpen, onClose, products, onAddToCart, onCheckout }: ChatBotProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "1",
@@ -458,10 +459,13 @@ You must remember the user’s context, like past queries or added items, to res
         )
         .join(
           "\n"
-        )}\n\nTotal: ₦${total.toLocaleString()}\n\nTo complete your order, please close this chat and click the cart icon to proceed with checkout. You'll need to provide your delivery address and contact information.`,
+        )}\n\nTotal: ₦${total.toLocaleString()}\n\nOpening the checkout form now — fill in your delivery details to place the order. 🚀`,
       timestamp: new Date(),
     };
     setMessages((prev) => [...prev, checkoutMessage]);
+    if (onCheckout) {
+      setTimeout(() => onCheckout(), 400);
+    }
   };
 
   const processPayment = () => {

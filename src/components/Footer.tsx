@@ -1,58 +1,46 @@
-import React from "react";
+import { Link } from "react-router-dom";
 import { Facebook, Twitter, Instagram, Mail, Store } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-white border-t shadow-inner mt-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Top Section */}
-        <div className="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-y-0">
-          {/* Logo and Tagline */}
-          <div className="flex items-center space-x-2">
-            <Store className="h-6 w-6 text-primary" />
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              ShopNexus
-            </span>
+    <footer className="bg-card/40 border-t border-border/60 mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="md:col-span-2">
+            <div className="flex items-center gap-2">
+              <Store className="h-6 w-6 text-primary" />
+              <span className="font-display text-lg font-bold text-gradient">ShopNexus</span>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground max-w-sm">
+              An AI-powered marketplace connecting independent sellers with buyers across Nigeria.
+            </p>
+            <div className="mt-4 flex space-x-4">
+              <a href="#" aria-label="Facebook" className="text-muted-foreground hover:text-primary"><Facebook className="h-5 w-5" /></a>
+              <a href="#" aria-label="Twitter" className="text-muted-foreground hover:text-primary"><Twitter className="h-5 w-5" /></a>
+              <a href="#" aria-label="Instagram" className="text-muted-foreground hover:text-primary"><Instagram className="h-5 w-5" /></a>
+              <a href="mailto:support@shopnexus.com" aria-label="Email" className="text-muted-foreground hover:text-primary"><Mail className="h-5 w-5" /></a>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 text-center md:text-left">
-            Your one-stop marketplace powered by AI.
-          </p>
 
-          {/* Social Icons */}
-          <div className="flex space-x-4">
-            <a
-              href="#"
-              aria-label="Facebook"
-              className="text-gray-500 hover:text-blue-600"
-            >
-              <Facebook className="h-5 w-5" />
-            </a>
-            <a
-              href="#"
-              aria-label="Twitter"
-              className="text-gray-500 hover:text-blue-400"
-            >
-              <Twitter className="h-5 w-5" />
-            </a>
-            <a
-              href="#"
-              aria-label="Instagram"
-              className="text-gray-500 hover:text-pink-500"
-            >
-              <Instagram className="h-5 w-5" />
-            </a>
-            <a
-              href="mailto:support@shopnexus.com"
-              aria-label="Email"
-              className="text-gray-500 hover:text-purple-600"
-            >
-              <Mail className="h-5 w-5" />
-            </a>
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Legal</p>
+            <ul className="space-y-2 text-sm">
+              <li><Link to="/legal/terms" className="hover:text-primary">Terms of Service</Link></li>
+              <li><Link to="/legal/privacy" className="hover:text-primary">Privacy Policy</Link></li>
+              <li><Link to="/legal/refund" className="hover:text-primary">Refunds & Returns</Link></li>
+              <li><Link to="/legal/shipping" className="hover:text-primary">Shipping</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Support</p>
+            <ul className="space-y-2 text-sm">
+              <li><a href="mailto:support@shopnexus.com" className="hover:text-primary">support@shopnexus.com</a></li>
+            </ul>
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-6 border-t pt-4 text-center text-sm text-gray-500">
+        <div className="mt-8 pt-6 border-t border-border/40 text-center text-xs text-muted-foreground">
           &copy; {new Date().getFullYear()} ShopNexus. All rights reserved.
         </div>
       </div>

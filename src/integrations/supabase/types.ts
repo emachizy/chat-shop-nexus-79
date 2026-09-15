@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -19,25 +19,37 @@ export type Database = {
           created_at: string
           id: string
           order_id: string
-          price: number
-          product_id: string
+          product_category: string | null
+          product_image: string | null
+          product_name: string
+          product_ref: string | null
           quantity: number
+          unit_price: number
+          vendor_id: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           order_id: string
-          price: number
-          product_id: string
+          product_category?: string | null
+          product_image?: string | null
+          product_name: string
+          product_ref?: string | null
           quantity: number
+          unit_price: number
+          vendor_id?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           order_id?: string
-          price?: number
-          product_id?: string
+          product_category?: string | null
+          product_image?: string | null
+          product_name?: string
+          product_ref?: string | null
           quantity?: number
+          unit_price?: number
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -48,10 +60,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
+            foreignKeyName: "order_items_vendor_id_fkey"
+            columns: ["vendor_id"]
             isOneToOne: false
-            referencedRelation: "products"
+            referencedRelation: "vendors"
             referencedColumns: ["id"]
           },
         ]
@@ -61,9 +73,12 @@ export type Database = {
           created_at: string
           id: string
           order_number: string
+          payment_method: string
           payment_status: string
+          payment_verified_at: string | null
           paystack_reference: string | null
           shipping_address: Json
+          status: string
           total_amount: number
           updated_at: string
           user_id: string
@@ -71,10 +86,13 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          order_number: string
+          order_number?: string
+          payment_method?: string
           payment_status?: string
+          payment_verified_at?: string | null
           paystack_reference?: string | null
           shipping_address: Json
+          status?: string
           total_amount: number
           updated_at?: string
           user_id: string
@@ -83,9 +101,12 @@ export type Database = {
           created_at?: string
           id?: string
           order_number?: string
+          payment_method?: string
           payment_status?: string
+          payment_verified_at?: string | null
           paystack_reference?: string | null
           shipping_address?: Json
+          status?: string
           total_amount?: number
           updated_at?: string
           user_id?: string
@@ -95,13 +116,13 @@ export type Database = {
       products: {
         Row: {
           brand: string | null
-          category: string
+          category: string | null
           color: string | null
           created_at: string
           description: string | null
           dimensions: string | null
           id: string
-          images: string[] | null
+          images: string[]
           is_active: boolean
           model: string | null
           name: string
@@ -113,13 +134,13 @@ export type Database = {
         }
         Insert: {
           brand?: string | null
-          category: string
+          category?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
           dimensions?: string | null
           id?: string
-          images?: string[] | null
+          images?: string[]
           is_active?: boolean
           model?: string | null
           name: string
@@ -131,13 +152,13 @@ export type Database = {
         }
         Update: {
           brand?: string | null
-          category?: string
+          category?: string | null
           color?: string | null
           created_at?: string
           description?: string | null
           dimensions?: string | null
           id?: string
-          images?: string[] | null
+          images?: string[]
           is_active?: boolean
           model?: string | null
           name?: string
@@ -157,36 +178,93 @@ export type Database = {
           },
         ]
       }
+      seller_requests: {
+        Row: {
+          created_at: string
+          id: string
+          pitch: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["seller_request_status"]
+          store_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pitch?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["seller_request_status"]
+          store_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pitch?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["seller_request_status"]
+          store_name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       vendors: {
         Row: {
           avatar_url: string | null
           created_at: string
           description: string | null
-          email: string
           id: string
-          name: string
+          is_active: boolean
           store_name: string
           updated_at: string
+          user_id: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
           description?: string | null
-          email: string
           id?: string
-          name: string
-          store_name: string
+          is_active?: boolean
+          store_name?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
           description?: string | null
-          email?: string
           id?: string
-          name?: string
+          is_active?: boolean
           store_name?: string
           updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -195,13 +273,49 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_order_number: {
-        Args: Record<PropertyKey, never>
-        Returns: string
+      admin_get_user_emails: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
+      }
+      admin_lookup_user_by_email: {
+        Args: { _email: string }
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
+      approve_seller_request: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
+      generate_order_number: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      order_belongs_to_seller: {
+        Args: { _order_id: string; _user_id: string }
+        Returns: boolean
+      }
+      owns_vendor_folder: {
+        Args: { _folder: string; _user_id: string }
+        Returns: boolean
+      }
+      reject_seller_request: {
+        Args: { _request_id: string }
+        Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "seller"
+      seller_request_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -328,6 +442,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "seller"],
+      seller_request_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const

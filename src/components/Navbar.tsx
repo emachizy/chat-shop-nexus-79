@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { ShoppingCart, Store, MessageCircle, User, Menu, X } from 'lucide-react';
+import { ShoppingCart, Sparkles, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -19,50 +18,51 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
   const [showAuth, setShowAuth] = useState(false);
 
   return (
-    <nav className="bg-white shadow-lg border-b sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 sm:h-16">
-          {/* Logo Section */}
-          <div className="flex items-center space-x-2">
-            <Store className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
-            <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              {isMobile ? 'ShopNexus' : 'ShopNexus'}
+    <nav className="sticky top-0 z-50 glass border-b border-border/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-primary blur-md opacity-60 rounded-lg" />
+              <div className="relative bg-gradient-primary rounded-lg p-1.5">
+                <Sparkles className="h-4 w-4 text-primary-foreground" />
+              </div>
+            </div>
+            <span className="text-lg sm:text-xl font-display font-bold tracking-tight">
+              Shop<span className="text-gradient">Nexus</span>
             </span>
           </div>
-          
-          {/* Action Buttons */}
-          <div className="flex items-center space-x-1 sm:space-x-4">
+
+          <div className="flex items-center gap-1 sm:gap-2">
             <Button
-              variant="outline"
-              size={isMobile ? "sm" : "sm"}
+              variant="ghost"
+              size="sm"
               onClick={onOpenChat}
-              className="flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3"
+              className="gap-1.5 hover:bg-primary/10 hover:text-primary"
             >
-              <MessageCircle className="h-4 w-4" />
-              <span className="hidden xs:inline">AI Assistant</span>
-              <span className="xs:hidden">AI</span>
+              <Sparkles className="h-4 w-4" />
+              <span className="hidden xs:inline">AI</span>
             </Button>
-            
+
             <Button
-              variant="outline"
-              size={isMobile ? "sm" : "sm"}
+              variant="ghost"
+              size="sm"
               onClick={onOpenCart}
-              className="flex items-center space-x-1 sm:space-x-2 relative px-2 sm:px-3"
+              className="relative gap-1.5 hover:bg-primary/10 hover:text-primary"
             >
               <ShoppingCart className="h-4 w-4" />
               <span className="hidden sm:inline">Cart</span>
               {cartItemsCount > 0 && (
-                <span className="absolute -top-2 -right-1 sm:-right-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center text-xs">
+                <span className="absolute -top-1 -right-1 bg-gradient-primary text-primary-foreground text-[10px] font-semibold rounded-full h-5 min-w-5 px-1 flex items-center justify-center shadow-glow">
                   {cartItemsCount}
                 </span>
               )}
             </Button>
-            
+
             <div className="hidden md:block">
               <UserMenu onShowAuth={() => setShowAuth(true)} />
             </div>
-            
-            {/* Mobile Menu Button */}
+
             {isMobile && (
               <Sheet>
                 <SheetTrigger asChild>
@@ -70,30 +70,19 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
                     <Menu className="h-4 w-4" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-80">
+                <SheetContent side="right" className="w-80 bg-card">
                   <SheetHeader>
-                    <SheetTitle>Menu</SheetTitle>
+                    <SheetTitle className="text-gradient font-display">Menu</SheetTitle>
                   </SheetHeader>
-                  <div className="flex flex-col space-y-4 mt-6">
-                    <Button
-                      variant="ghost"
-                      onClick={onOpenChat}
-                      className="flex items-center space-x-2 justify-start"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      <span>AI Assistant</span>
+                  <div className="flex flex-col space-y-2 mt-6">
+                    <Button variant="ghost" onClick={onOpenChat} className="justify-start gap-2">
+                      <Sparkles className="h-4 w-4" /> AI Assistant
                     </Button>
-                    
-                    <Button
-                      variant="ghost"
-                      onClick={onOpenCart}
-                      className="flex items-center space-x-2 justify-start"
-                    >
+                    <Button variant="ghost" onClick={onOpenCart} className="justify-start gap-2">
                       <ShoppingCart className="h-4 w-4" />
-                      <span>Cart {cartItemsCount > 0 && `(${cartItemsCount})`}</span>
+                      Cart {cartItemsCount > 0 && `(${cartItemsCount})`}
                     </Button>
-                    
-                    <div className="block md:hidden">
+                    <div className="pt-2">
                       <UserMenu onShowAuth={() => setShowAuth(true)} />
                     </div>
                   </div>
@@ -105,8 +94,8 @@ const Navbar = ({ cartItemsCount, onOpenChat, onOpenCart }: NavbarProps) => {
       </div>
 
       <Dialog open={showAuth} onOpenChange={setShowAuth}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
+        <DialogContent className="sm:max-w-[440px] p-0 border-border/70 bg-card">
+          <DialogHeader className="sr-only">
             <DialogTitle>Authentication</DialogTitle>
           </DialogHeader>
           <Auth onClose={() => setShowAuth(false)} />
