@@ -20,6 +20,11 @@ export interface Product {
   stock: number;
   vendor?: Vendor;
   createdAt: Date;
+  brand?: string;
+  model?: string;
+  color?: string;
+  size?: string;
+  dimensions?: string;
 }
 
 export interface CartItem {

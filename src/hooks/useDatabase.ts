@@ -44,7 +44,12 @@ export const useProducts = () => {
           avatar: item.vendor.avatar_url,
           createdAt: new Date(item.vendor.created_at)
         } : undefined,
-        createdAt: new Date(item.created_at)
+        createdAt: new Date(item.created_at),
+        brand: item.brand ?? undefined,
+        model: item.model ?? undefined,
+        color: item.color ?? undefined,
+        size: item.size ?? undefined,
+        dimensions: item.dimensions ?? undefined,
       }));
 
       setProducts(formattedProducts);

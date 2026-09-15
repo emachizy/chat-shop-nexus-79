@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { ChatMessage, Product } from "@/types";
 import ProductCard from "./ProductCard";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatBotProps {
   isOpen: boolean;
@@ -68,31 +69,98 @@ You must remember the user’s context, like past queries or added items, to res
     }
   }, [messages]);
 
+  // Words to ignore when scoring so they don't dilute relevance
+  const SEARCH_STOPWORDS = new Set([
+    "the", "a", "an", "and", "for", "with", "that", "this", "from", "your",
+    "are", "you", "want", "looking", "need", "find", "show", "me", "of",
+    "to", "in", "on", "get", "buy", "search", "please", "some", "any",
+  ]);
+
+  // Maps a query term to the category value(s) it should match
+  const CATEGORY_SYNONYMS: Record<string, string[]> = {
+    phone: ["phones"], phones: ["phones"], smartphone: ["phones"],
+    laptop: ["laptops"], laptops: ["laptops"], notebook: ["laptops"],
+    tablet: ["tablets"], tablets: ["tablets"], ipad: ["tablets"],
+    headphone: ["headphones"], headphones: ["headphones"], earbuds: ["headphones"], earphones: ["headphones"],
+    watch: ["wearables"], wearable: ["wearables"], wearables: ["wearables"],
+    shoe: ["fashion"], shoes: ["fashion"], sneaker: ["fashion"], sneakers: ["fashion"],
+    game: ["gaming"], gaming: ["gaming"], console: ["gaming"],
+  };
+
+  const scoreProduct = (product: Product, query: string): number => {
+    const tokens = query
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.replace(/[^a-z0-9."]/g, ""))
+      .filter((t) => t.length > 1 && !SEARCH_STOPWORDS.has(t));
+
+    if (tokens.length === 0) return 0;
+
+    const name = product.name.toLowerCase();
+    const description = product.description.toLowerCase();
+    const category = product.category.toLowerCase();
+    const brand = (product.brand || "").toLowerCase();
+    const model = (product.model || "").toLowerCase();
+    const color = (product.color || "").toLowerCase();
+    const size = (product.size || "").toLowerCase();
+    const dimensions = (product.dimensions || "").toLowerCase();
+
+    let score = 0;
+    let matchedTokens = 0;
+
+    for (const token of tokens) {
+      let tokenMatched = false;
+
+      if (name.includes(token)) {
+        score += 5;
+        tokenMatched = true;
+      }
+      if (brand && brand.includes(token)) {
+        score += 4;
+        tokenMatched = true;
+      }
+      if (model && model.includes(token)) {
+        score += 4;
+        tokenMatched = true;
+      }
+      if (color && color.includes(token)) {
+        score += 3;
+        tokenMatched = true;
+      }
+      if ((size && size.includes(token)) || (dimensions && dimensions.includes(token))) {
+        score += 3;
+        tokenMatched = true;
+      }
+      if (CATEGORY_SYNONYMS[token]?.includes(category)) {
+        score += 3;
+        tokenMatched = true;
+      } else if (category.includes(token)) {
+        score += 2;
+        tokenMatched = true;
+      }
+      if (description.includes(token)) {
+        score += 1;
+        tokenMatched = true;
+      }
+
+      if (tokenMatched) matchedTokens++;
+    }
+
+    // Reward covering more of the distinct terms the user gave, not just raw hits,
+    // so a product matching "black" AND "13 inch" AND "laptop" outranks one matching only "laptop".
+    if (matchedTokens > 0) {
+      score += matchedTokens * 2;
+    }
+
+    return score;
+  };
+
   const searchProducts = (query: string): Product[] => {
-    const lowercaseQuery = query.toLowerCase();
-
-    // Extract key terms for better matching
-    const searchTerms = lowercaseQuery
-      .split(" ")
-      .filter((term) => term.length > 2);
-
-    return products.filter((product) => {
-      const searchableText =
-        `${product.name} ${product.description} ${product.category}`.toLowerCase();
-
-      // Check if any search term matches
-      return searchTerms.some(
-        (term) =>
-          searchableText.includes(term) ||
-          // Handle common variations
-          (term === "phone" && product.category === "phones") ||
-          (term === "phones" && product.category === "phones") ||
-          (term === "laptop" && product.category === "laptops") ||
-          (term === "laptops" && product.category === "laptops") ||
-          (term === "tablet" && product.category === "tablets") ||
-          (term === "tablets" && product.category === "tablets")
-      );
-    });
+    return products
+      .map((product) => ({ product, score: scoreProduct(product, query) }))
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ product }) => product);
   };
 
   const getProductSpecs = (productName: string): Product | null => {
@@ -446,46 +514,31 @@ You must remember the user’s context, like past queries or added items, to res
       : newMemory[0].content;
 
     try {
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization:
-              "Bearer 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",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              { role: "system", content: systemContext },
-              ...newMemory.slice(1), // Skip the original system message since we modified it
-            ],
-            max_tokens: 200,
-            temperature: 0.5,
-          }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke("chat-assistant", {
+        body: {
+          messages: [
+            { role: "system", content: systemContext },
+            ...newMemory.slice(1), // Skip the original system message since we modified it
+          ],
+        },
+      });
 
-      if (response.ok) {
-        const data = await response.json();
-        const assistantResponse =
-          data.choices[0]?.message?.content ||
-          `I found ${foundProducts.length} products for you! Take a look below. Say "add [product name] to cart" to add any item, or ask for "specs of [product name]" to get detailed specifications.`;
+      if (error) throw error;
 
-        // Add assistant response to memory
-        const updatedMemory = [
-          ...newMemory,
-          { role: "assistant" as const, content: assistantResponse },
-        ];
-        setConversationMemory(updatedMemory);
+      const assistantResponse =
+        data?.content ||
+        `I found ${foundProducts.length} products for you! Take a look below. Say "add [product name] to cart" to add any item, or ask for "specs of [product name]" to get detailed specifications.`;
 
-        return assistantResponse;
-      } else {
-        throw new Error("OpenAI API request failed");
-      }
+      // Add assistant response to memory
+      const updatedMemory = [
+        ...newMemory,
+        { role: "assistant" as const, content: assistantResponse },
+      ];
+      setConversationMemory(updatedMemory);
+
+      return assistantResponse;
     } catch (error) {
-      console.error("Error calling OpenAI:", error);
+      console.error("Error calling chat assistant:", error);
       return `I found ${foundProducts.length} products matching "${userInput}". Check them out below! Say "add [product name] to cart" to add any item, or ask for "specs of [product name]" for detailed specifications.`;
     }
   };
